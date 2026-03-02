@@ -1,0 +1,6 @@
+#ignore data files
+data/
+*.csv
+*.zip
+
+kaggle.json
