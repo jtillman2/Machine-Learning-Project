@@ -2,6 +2,7 @@
 Machine learning project focused on using MMA stats to predict fight outcomes
 
 ## Project Structure
+```text
 MACHINE-LEARNING-PROJECT/
 ├── data/
 │   ├── ufc_event_fight_stats.csv 
@@ -12,3 +13,4 @@ MACHINE-LEARNING-PROJECT/
 ├── src/
 ├── .gitignore
 └── README.md
+```
