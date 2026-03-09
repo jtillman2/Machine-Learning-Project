@@ -1,1 +1,16 @@
 kaggle.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large archives
+*.zip
