@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import pandas as pd; f = pd.read_csv\\('C:/Users/maxle/Documents/ML-Project-clone/data/raw/ufc_fighters.csv'\\); print\\(f['fighter_stance'].value_counts\\(dropna=False\\)\\)\")",
+      "Bash(python -c \"import pandas as pd; f = pd.read_csv\\('C:/Users/maxle/Documents/ML-Project-clone/data/raw/ufc_event_fight_stats.csv'\\); print\\([c for c in f.columns if 'stance' in c.lower\\(\\)]\\)\")"
+    ]
+  }
+}
