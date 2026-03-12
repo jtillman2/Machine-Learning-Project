@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(python -c \"import pandas as pd; f = pd.read_csv\\('C:/Users/maxle/Documents/ML-Project-clone/data/raw/ufc_fighters.csv'\\); print\\(f['fighter_stance'].value_counts\\(dropna=False\\)\\)\")",
-      "Bash(python -c \"import pandas as pd; f = pd.read_csv\\('C:/Users/maxle/Documents/ML-Project-clone/data/raw/ufc_event_fight_stats.csv'\\); print\\([c for c in f.columns if 'stance' in c.lower\\(\\)]\\)\")"
+      "Bash(python -c \"import pandas as pd; f = pd.read_csv\\('C:/Users/maxle/Documents/ML-Project-clone/data/raw/ufc_event_fight_stats.csv'\\); print\\([c for c in f.columns if 'stance' in c.lower\\(\\)]\\)\")",
+      "Bash(python -c \"\nimport pandas as pd\ndf = pd.read_csv\\('C:/Users/maxle/Documents/ML-Project-clone/data/processed/fights_trainable.csv'\\)\nf1_cols = [c for c in df.columns if c.startswith\\('f1_'\\) and df[c].dtype in ['float64','int64']]\nprint\\('Column | f1 range | f2 range'\\)\nfor col in f1_cols:\n    f2_col = col.replace\\('f1_','f2_',1\\)\n    if f2_col in df.columns:\n        print\\(f'{col}: [{df[col].min\\(\\):.1f}, {df[col].max\\(\\):.1f}] | {f2_col}: [{df[f2_col].min\\(\\):.1f}, {df[f2_col].max\\(\\):.1f}]'\\)\n\")",
+      "Bash(python -c \"\nimport json\nwith open\\('C:/Users/maxle/Documents/ML-Project-clone/notebooks/feature_engineering.ipynb'\\) as f:\n    nb = json.load\\(f\\)\ncell = nb['cells'][24]\nprint\\(f'Cell 24 \\(id: {cell.get\\(\\\\\"id\\\\\"\\)}, type: {cell[\\\\\"cell_type\\\\\"]}\\):'\\)\nprint\\(''.join\\(cell['source']\\)\\)\n\")",
+      "Bash(python -c \"\nimport json\nwith open\\('C:/Users/maxle/Documents/ML-Project-clone/notebooks/feature_engineering.ipynb'\\) as f:\n    nb = json.load\\(f\\)\ncell_ids = ['cb6dbe7c']\nfor i, cell in enumerate\\(nb['cells']\\):\n    if cell.get\\('id'\\) in cell_ids:\n        print\\(f'=== Cell {i} \\(id: {cell.get\\(\\\\\"id\\\\\"\\)}\\) ==='\\)\n        print\\(''.join\\(cell['source']\\)\\)\n\")",
+      "Bash(python -c \"\nimport json\nwith open\\('C:/Users/maxle/Documents/ML-Project-clone/notebooks/feature_engineering.ipynb'\\) as f:\n    nb = json.load\\(f\\)\nprint\\('All cell ids:'\\)\nfor i, cell in enumerate\\(nb['cells']\\):\n    print\\(f'{i}: {cell.get\\(\\\\\"id\\\\\"\\)} \\({cell[\\\\\"cell_type\\\\\"]}\\) - {repr\\(\\\\\"\\\\\".join\\(cell[\\\\\"source\\\\\"]\\)[:60]\\)}'\\)\n\")",
+      "Bash(python -c \"\nimport json\nwith open\\('C:/Users/maxle/Documents/ML-Project-clone/notebooks/feature_engineering.ipynb'\\) as f:\n    nb = json.load\\(f\\)\nfor cell in nb['cells']:\n    if cell.get\\('id'\\) == '130510e3':\n        print\\(''.join\\(cell['source']\\)\\)\n\")"
     ]
   }
 }
