@@ -14,8 +14,8 @@ MACHINE-LEARNING-PROJECT/
 │   └── processed/                  <- cleaned/feature-engineered CSVs saved here
 ├── notebooks/
 │   ├── data_cleaning.ipynb
-│   ├── feature_engineering.ipynb   (coming soon)
-│   └── modeling.ipynb              (coming soon)
+│   ├── feature_engineering.ipynb
+│   └── modeling.ipynb
 ├── .gitignore
 ├── requirements.txt
 └── README.md
