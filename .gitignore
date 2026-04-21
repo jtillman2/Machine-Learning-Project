@@ -16,5 +16,9 @@ Thumbs.db
 # data/processed/*
 # !data/processed/.gitkeep
 
+# Generated scripts
+predict_upcoming_fights.py
+scripts/
+
 # Large archives
 *.zip
