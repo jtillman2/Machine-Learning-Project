@@ -25,9 +25,6 @@ MACHINE-LEARNING-PROJECT/
 │   │   ├── fights_validation_exp2.csv
 │   │   ├── odds_cleaned.csv
 │   │   ├── random_forest_validation_predictions.csv
-│   │   ├── scaler.pkl
-│   │   ├── scaler_exp1.pkl
-│   │   ├── scaler_exp2.pkl
 │   │   └── Logistic_Regression_Outputs/
 │   │       ├── logistic_regression_test_predictions.csv
 │   │       ├── logistic_regression_test_exp1_predictions.csv
@@ -37,6 +34,8 @@ MACHINE-LEARNING-PROJECT/
 │   │       └── logistic_regression_validation_exp2_predictions.csv
 │   └── scaler/
 │       └── scaler.pkl
+|       └── scaler_exp1.pkl
+|       └── scaler_exp2.pkl
 ├── notebooks/
 │   ├── data_cleaning.ipynb
 │   ├── feature_engineering.ipynb
