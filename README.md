@@ -33,16 +33,17 @@ MACHINE-LEARNING-PROJECT/
 │   │       ├── logistic_regression_validation_exp1_predictions.csv
 │   │       └── logistic_regression_validation_exp2_predictions.csv
 │   └── scaler/
-│       └── scaler.pkl
-|       └── scaler_exp1.pkl
-|       └── scaler_exp2.pkl
+│       ├── scaler.pkl
+│       ├── scaler_exp1.pkl
+│       └── scaler_exp2.pkl
 ├── notebooks/
 │   ├── data_cleaning.ipynb
 │   ├── feature_engineering.ipynb
 │   ├── logistic_regression.ipynb
 │   ├── model_random_forest.ipynb
 │   ├── model_xgboost.ipynb
-│   └── odds_data_pre.ipynb
+│   ├── odds_data_pre.ipynb
+│   └── playAround.py.text
 ├── models/
 │   ├── logistic_regression_baseline.joblib
 │   └── random_forest.joblib
