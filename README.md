@@ -25,13 +25,20 @@ MACHINE-LEARNING-PROJECT/
 │   │   ├── fights_validation_exp2.csv
 │   │   ├── odds_cleaned.csv
 │   │   ├── random_forest_validation_predictions.csv
-│   │   └── Logistic_Regression_Outputs/
-│   │       ├── logistic_regression_test_predictions.csv
-│   │       ├── logistic_regression_test_exp1_predictions.csv
-│   │       ├── logistic_regression_test_exp2_predictions.csv
-│   │       ├── logistic_regression_validation_predictions.csv
-│   │       ├── logistic_regression_validation_exp1_predictions.csv
-│   │       └── logistic_regression_validation_exp2_predictions.csv
+│   │   ├── Logistic_Regression_Outputs/
+│   │   │   ├── logistic_regression_test_predictions.csv
+│   │   │   ├── logistic_regression_test_exp1_predictions.csv
+│   │   │   ├── logistic_regression_test_exp2_predictions.csv
+│   │   │   ├── logistic_regression_validation_predictions.csv
+│   │   │   ├── logistic_regression_validation_exp1_predictions.csv
+│   │   │   └── logistic_regression_validation_exp2_predictions.csv
+│   │   └── XGBoost_Outputs/
+│   │       ├── xgboost_test_predictions.csv
+│   │       ├── xgboost_test_exp1_predictions.csv
+│   │       ├── xgboost_test_exp2_predictions.csv
+│   │       ├── xgboost_validation_predictions.csv
+│   │       ├── xgboost_validation_exp1_predictions.csv
+│   │       └── xgboost_validation_exp2_predictions.csv
 │   └── scaler/
 │       ├── scaler.pkl
 │       ├── scaler_exp1.pkl
