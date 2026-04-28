@@ -1,0 +1,9 @@
+def mySum(x):
+    if x < 15:
+        return "This is less than 15"
+    else:
+        return "what the fuck is this shit"
+
+
+
+print(mySum(15))
