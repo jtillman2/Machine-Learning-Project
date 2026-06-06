@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UFC Fight Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #05050c;
+      --surface:  #0c0c18;
+      --card:     #111120;
+      --border:   #1c1c2e;
+      --border-hi:#2c2c46;
+      --red:      #FF2D20;
+      --red-dim:  #991810;
+      --ice:      #38BDF8;
+      --gold:     #FBBF24;
+      --text:     #F0EEF8;
+      --muted:    #6A6878;
+    }
+
+    body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 55% 70% at 12% 50%, rgba(255,45,32,.08) 0%, transparent 100%),
+        radial-gradient(ellipse 55% 70% at 88% 50%, rgba(56,189,248,.08) 0%, transparent 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Oswald', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem 5rem;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    header {
+      width: 100%;
+      max-width: 900px;
+      padding: 2.5rem 0 1.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      animation: slideDown .5s ease both;
+    }
+
+    .header-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      color: var(--red);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      margin-bottom: .45rem;
+    }
+
+    header h1 {
+      font-size: 3.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: .9;
+      letter-spacing: .02em;
+    }
+
+    header h1 .accent {
+      color: var(--red);
+      position: relative;
+    }
+
+    header h1 .accent::after {
+      content: '';
+      position: absolute;
+      bottom: 2px; left: 0;
+      height: 3px; width: 0;
+      background: var(--red);
+      animation: lineGrow .5s .45s ease forwards;
+    }
+
+    @keyframes lineGrow { to { width: 100%; } }
+
+    .header-right {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      color: var(--muted);
+      line-height: 2.1;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Main wrap ───────────────────────────────────────── */
+    .wrap { width: 100%; max-width: 900px; }
+
+    /* ── Arena — z-index keeps dropdowns above controls ─── */
+    .arena {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 2;
+      animation: fadeUp .5s .1s ease both;
+    }
+
+    .fighter-slot {
+      border: 1px solid var(--border);
+      padding: 1.8rem 1.6rem 1.6rem;
+      position: relative;
+      background: var(--surface);
+    }
+
+    .fighter-slot:first-child { border-right: none; }
+    .fighter-slot:last-child  { border-left:  none; }
+
+    .fighter-slot:first-child::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px;
+      width: 20px; height: 20px;
+      border-top: 2px solid var(--red);
+      border-left: 2px solid var(--red);
+      pointer-events: none;
+    }
+
+    .fighter-slot:last-child::before {
+      content: '';
+      position: absolute;
+      top: -1px; right: -1px;
+      width: 20px; height: 20px;
+      border-top: 2px solid var(--ice);
+      border-right: 2px solid var(--ice);
+      pointer-events: none;
+    }
+
+    .slot-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      color: var(--muted);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    /* Portrait */
+    .portrait-wrap { margin-bottom: 1rem; }
+
+    .fighter-portrait {
+      width: 76px; height: 76px;
+      object-fit: cover;
+      object-position: top center;
+      clip-path: polygon(29% 0%, 71% 0%, 100% 29%, 100% 71%, 71% 100%, 29% 100%, 0% 71%, 0% 29%);
+      background: var(--card);
+      opacity: .45;
+      transition: opacity .4s;
+    }
+    .fighter-portrait.active { opacity: 1; }
+
+    /* Input */
+    .autocomplete-wrapper { position: relative; }
+
+    .autocomplete-wrapper input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border-hi);
+      color: var(--text);
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+      letter-spacing: .03em;
+      padding: .5rem 2.2rem .5rem 0;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .fighter-slot:first-child .autocomplete-wrapper input:focus { border-bottom-color: var(--red); }
+    .fighter-slot:last-child  .autocomplete-wrapper input:focus { border-bottom-color: var(--ice); }
+
+    .autocomplete-wrapper input::placeholder {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 1rem;
+    }
+
+    /* Die button */
+    .rand-btn {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 26px; height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      border: 1px solid var(--border-hi);
+      cursor: pointer;
+      color: var(--muted);
+      transition: color .15s, border-color .15s;
+      z-index: 10;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .rand-btn:hover { color: var(--gold); border-color: var(--gold); }
+    .rand-btn svg { transition: transform .2s; }
+    .rand-btn:hover svg { transform: rotate(20deg) scale(1.1); }
+
+    /* Rand picker */
+    .rand-picker {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0; right: 0;
+      background: var(--card);
+      border: 1px solid var(--border-hi);
+      padding: .9rem;
+      z-index: 200;
+      box-shadow: 0 12px 36px rgba(0,0,0,.85);
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .18s, transform .18s, visibility 0s .18s;
+      pointer-events: none;
+    }
+    .rand-picker.open {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity .18s, transform .18s;
+      pointer-events: auto;
+    }
+
+    /* Picker header */
+    .rp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: .65rem;
+      margin-bottom: .65rem;
+      border-bottom: 1px solid var(--border-hi);
+    }
+    .rp-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .2em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .rp-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .8rem;
+      line-height: 1;
+      padding: 2px 4px;
+      transition: color .15s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .rp-close:hover { color: var(--text); }
+
+    /* Gender toggle */
+    .rp-gender {
+      display: flex;
+      border: 1px solid var(--border-hi);
+      margin-bottom: .7rem;
+    }
+    .rp-gender-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: .42rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .rp-gender-btn + .rp-gender-btn { border-left: 1px solid var(--border-hi); }
+    .rp-gender-btn.active {
+      background: rgba(255,45,32,.1);
+      color: var(--red);
+    }
+
+    /* Weight class chips */
+    .rp-classes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      margin-bottom: .75rem;
+    }
+    .rp-wc {
+      background: none;
+      border: 1px solid var(--border-hi);
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .06em;
+      padding: .28rem .55rem;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+    .rp-wc.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(251,191,36,.07);
+    }
+    .rp-wc:hover:not(.active) { border-color: var(--border-hi); color: var(--text); background: var(--surface); }
+
+    /* Pick button */
+    .rp-go {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      color: var(--text);
+      font-family: 'Oswald', sans-serif;
+      font-size: .88rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .5rem;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .rp-go:hover { border-color: var(--gold); color: var(--gold); background: var(--card); }
+
+    /* Dropdown */
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--card);
+      border: 1px solid var(--border-hi);
+      z-index: 50;
+      box-shadow: 0 8px 28px rgba(0,0,0,.7);
+    }
+    .dropdown.open { display: block; }
+
+    .dropdown-item {
+      padding: .55rem .9rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Oswald', sans-serif;
+      font-size: .95rem;
+      font-weight: 400;
+      letter-spacing: .02em;
+      transition: background .1s;
+    }
+    .dropdown-item:hover, .dropdown-item.active { background: var(--border); }
+    .dropdown-item .record {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .68rem;
+      color: var(--muted);
+    }
+
+    /* ── VS column ───────────────────────────────────────── */
+    .vs-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      align-self: stretch;
+    }
+
+    .vs-text {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--border-hi);
+      letter-spacing: .1em;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      user-select: none;
+    }
+
+    /* ── Controls — sits below arena in stacking order ───── */
+    .controls {
+      position: relative;
+      z-index: 1;
+      animation: fadeUp .5s .2s ease both;
+    }
+
+    /* Randomize strip */
+    .rand-strip {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .9rem;
+      padding: .8rem 1.5rem;
+      background: none;
+      border: 1px dashed var(--border-hi);
+      cursor: pointer;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .63rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin-bottom: 1.75rem;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .rand-strip:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(251,191,36,.03);
+    }
+    .rand-strip svg { flex-shrink: 0; transition: transform .25s; }
+    .rand-strip:hover svg { transform: rotate(20deg) scale(1.15); }
+
+    /* Model selector */
+    .model-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .model-row-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      color: var(--muted);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .model-pill { display: flex; }
+    .model-pill input[type="radio"] { display: none; }
+    .model-pill span {
+      display: block;
+      padding: .32rem .95rem;
+      border: 1px solid var(--border);
+      font-family: 'Oswald', sans-serif;
+      font-size: .85rem;
+      font-weight: 400;
+      letter-spacing: .04em;
+      cursor: pointer;
+      color: var(--muted);
+      transition: border-color .15s, color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .model-pill span em {
+      font-style: normal;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      opacity: .5;
+      margin-left: .3rem;
+    }
+    .model-pill input:checked + span {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(251,191,36,.05);
+    }
+    .model-pill span:hover { border-color: var(--border-hi); color: var(--text); }
+
+    /* Status */
+    .status-msg {
+      display: none;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .68rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+      margin-bottom: .65rem;
+    }
+    .status-msg.visible { display: block; }
+
+    /* Predict button */
+    .predict-btn {
+      display: block;
+      width: 100%;
+      padding: 1.05rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: .75rem;
+      transition: background .2s;
+    }
+    .predict-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.14) 50%, transparent);
+      transform: translateX(-100%);
+      transition: transform .45s ease;
+    }
+    .predict-btn:hover:not(:disabled)::after { transform: translateX(100%); }
+    .predict-btn:disabled { background: var(--red-dim); cursor: not-allowed; }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-banner {
+      display: none;
+      border: 1px solid var(--red-dim);
+      border-left: 3px solid var(--red);
+      background: rgba(255,45,32,.06);
+      color: #f99;
+      padding: .65rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .75rem;
+      margin-bottom: .75rem;
+      letter-spacing: .03em;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ── Results ─────────────────────────────────────────── */
+    .results { display: none; }
+    .results.visible { display: block; animation: fadeUp .4s ease both; }
+
+    .result-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      color: var(--muted);
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 1.4rem;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 1px;
+    }
+
+    .result-card {
+      background: var(--surface);
+      padding: 2rem 1.5rem 1.6rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .result-card.winner { background: var(--card); }
+
+    .result-card.winner::before {
+      content: 'FAVORED';
+      position: absolute;
+      top: .7rem; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .5rem;
+      letter-spacing: .28em;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+
+    .result-card:first-child.winner { box-shadow: inset 0 0 0 1px rgba(255,45,32,.4); }
+    .result-card:last-child.winner  { box-shadow: inset 0 0 0 1px rgba(56,189,248,.38); }
+
+    .r-name {
+      font-size: 1.45rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: .2rem;
+      margin-top: .5rem;
+    }
+
+    .r-record {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .66rem;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+      letter-spacing: .04em;
+    }
+
+    .r-pct {
+      font-size: 5rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -.01em;
+    }
+    .result-card:first-child .r-pct { color: var(--red); }
+    .result-card:last-child  .r-pct { color: var(--ice); }
+
+    .r-win-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .56rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      margin-top: .3rem;
+    }
+
+    .prob-track {
+      height: 8px;
+      display: flex;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .prob-bar-f1 {
+      height: 100%;
+      background: var(--red);
+      flex-shrink: 0;
+      transition: width .9s cubic-bezier(.4,0,.2,1);
+    }
+    .prob-bar-f2 { height: 100%; background: var(--ice); flex: 1; }
+
+    .prob-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: .35rem;
+      margin-bottom: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .66rem;
+      color: var(--muted);
+    }
+
+    /* Betting section */
+    .odds-box {
+      border: 1px solid var(--border);
+      padding: 1.4rem 1.6rem;
+      margin-top: .25rem;
+    }
+
+    .odds-box-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .58rem;
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .odds-inputs-row { display: flex; gap: 1.2rem; margin-bottom: 1rem; }
+    .odds-input-grp  { flex: 1; display: flex; flex-direction: column; gap: .3rem; }
+
+    .odds-input-grp label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6rem;
+      color: var(--muted);
+      letter-spacing: .04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .odds-inp {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border-hi);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .95rem;
+      padding: .3rem 0;
+      outline: none;
+      width: 100%;
+      transition: border-color .15s;
+    }
+    .odds-inp:focus { border-bottom-color: var(--gold); }
+    .odds-inp::placeholder { color: var(--muted); font-size: .78rem; }
+
+    .value-banner {
+      padding: .6rem 1rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: .88rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-left: 3px solid;
+      margin-bottom: .75rem;
+    }
+    .value-pos { background: rgba(74,222,128,.05); color: #4ade80; border-color: #4ade80; }
+    .value-neg { background: rgba(255,255,255,.02); color: var(--muted); border-color: var(--border-hi); }
+
+    .value-rows { display: flex; flex-direction: column; }
+    .value-row {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: .4rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .value-row-name {
+      flex: 1;
+      font-family: 'Oswald', sans-serif;
+      font-size: .9rem;
+      font-weight: 400;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .value-detail { flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: .63rem; color: var(--muted); }
+    .ev-pos { color: #4ade80; font-weight: 700; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: .68rem; }
+    .ev-neg { color: #f87171; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: .68rem; }
+
+    /* Footer */
+    footer {
+      width: 100%;
+      max-width: 900px;
+      margin-top: 3.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+      font-size: .58rem;
+      line-height: 2.2;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 2.8rem; }
+      .header-right { display: none; }
+      .arena { grid-template-columns: 1fr; }
+      .fighter-slot:first-child { border-right: 1px solid var(--border); border-bottom: none; }
+      .fighter-slot:last-child  { border-left:  1px solid var(--border); border-top: none; }
+      .vs-col { border: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: .6rem 1.6rem; align-self: auto; }
+      .vs-text { writing-mode: horizontal-tb; font-size: 1.1rem; }
+      .result-grid { grid-template-columns: 1fr; }
+      .r-pct { font-size: 3.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-eyebrow">// UFC Analytics</div>
+    <h1>Fight<br><span class="accent">Predictor</span></h1>
+  </div>
+  <div class="header-right">
+    ML Win Probability<br>
+    Historical Fight Data<br>
+    V2.0
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="arena">
+    <!-- Fighter 1 -->
+    <div class="fighter-slot">
+      <div class="slot-label">// Fighter 01</div>
+      <div class="portrait-wrap">
+        <img id="portrait1" class="fighter-portrait" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23111120'/%3E%3Ccircle cx='40' cy='29' r='14' fill='%23252540'/%3E%3Cellipse cx='40' cy='72' rx='24' ry='20' fill='%23252540'/%3E%3C/svg%3E" alt="" />
+      </div>
+      <div class="autocomplete-wrapper">
+        <input id="f1" type="text" placeholder="e.g. Jon Jones" autocomplete="off" />
+        <button class="rand-btn" id="randBtn1" type="button" onclick="toggleRandPicker('f1', event)" title="Random fighter">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".5"/>
+            <circle cx="5.5" cy="5.5" r="1.2"/><circle cx="10.5" cy="5.5" r="1.2"/>
+            <circle cx="5.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="10.5" r="1.2"/>
+          </svg>
+        </button>
+        <div id="drop1" class="dropdown"></div>
+        <div class="rand-picker" id="randPicker1">
+          <div class="rp-header">
+            <span class="rp-title">// Random Fighter</span>
+            <button class="rp-close" onclick="closeRandPicker('f1')">✕</button>
+          </div>
+          <div class="rp-gender" id="randGenderRow1">
+            <button class="rp-gender-btn active" onclick="setRandGender('f1','male',this)">Men's</button>
+            <button class="rp-gender-btn" onclick="setRandGender('f1','female',this)">Women's</button>
+          </div>
+          <div class="rp-classes" id="randClasses1"></div>
+          <button class="rp-go" onclick="pickRandomFighter('f1')">Pick Fighter</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vs-col"><div class="vs-text">VS</div></div>
+
+    <!-- Fighter 2 -->
+    <div class="fighter-slot">
+      <div class="slot-label">// Fighter 02</div>
+      <div class="portrait-wrap">
+        <img id="portrait2" class="fighter-portrait" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23111120'/%3E%3Ccircle cx='40' cy='29' r='14' fill='%23252540'/%3E%3Cellipse cx='40' cy='72' rx='24' ry='20' fill='%23252540'/%3E%3C/svg%3E" alt="" />
+      </div>
+      <div class="autocomplete-wrapper">
+        <input id="f2" type="text" placeholder="e.g. Stipe Miocic" autocomplete="off" />
+        <button class="rand-btn" id="randBtn2" type="button" onclick="toggleRandPicker('f2', event)" title="Random fighter">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".5"/>
+            <circle cx="5.5" cy="5.5" r="1.2"/><circle cx="10.5" cy="5.5" r="1.2"/>
+            <circle cx="5.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="10.5" r="1.2"/>
+          </svg>
+        </button>
+        <div id="drop2" class="dropdown"></div>
+        <div class="rand-picker" id="randPicker2">
+          <div class="rp-header">
+            <span class="rp-title">// Random Fighter</span>
+            <button class="rp-close" onclick="closeRandPicker('f2')">✕</button>
+          </div>
+          <div class="rp-gender" id="randGenderRow2">
+            <button class="rp-gender-btn active" onclick="setRandGender('f2','male',this)">Men's</button>
+            <button class="rp-gender-btn" onclick="setRandGender('f2','female',this)">Women's</button>
+          </div>
+          <div class="rp-classes" id="randClasses2"></div>
+          <button class="rp-go" onclick="pickRandomFighter('f2')">Pick Fighter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+
+    <button class="rand-strip" type="button" onclick="randomizeBoth()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+        <rect x="1" y="1" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".5"/>
+        <circle cx="5.5" cy="5.5" r="1.2"/><circle cx="10.5" cy="5.5" r="1.2"/>
+        <circle cx="5.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="10.5" r="1.2"/>
+      </svg>
+      Randomize Matchup
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+        <rect x="1" y="1" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".5"/>
+        <circle cx="5.5" cy="5.5" r="1.2"/><circle cx="10.5" cy="5.5" r="1.2"/>
+        <circle cx="5.5" cy="10.5" r="1.2"/><circle cx="10.5" cy="10.5" r="1.2"/>
+      </svg>
+    </button>
+
+    <div class="model-row" id="modelSelector">
+      <span class="model-row-label">// Model</span>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+
+    <button class="predict-btn" id="predictBtn" onclick="runPrediction()">
+      <span id="btnText">Run Prediction</span>
+      <span class="spinner" id="spinner"></span>
+    </button>
+
+    <div class="error-banner" id="errorBanner"></div>
+    <div class="results" id="results">
+      <div class="result-eyebrow" id="resultHeader">Model prediction</div>
+      <div class="result-grid">
+        <div class="result-card" id="card1">
+          <div class="r-name" id="res1Name">—</div>
+          <div class="r-record" id="res1Record"></div>
+          <div class="r-pct" id="res1Pct">—</div>
+          <div class="r-win-label">Win probability</div>
+        </div>
+        <div class="result-card" id="card2">
+          <div class="r-name" id="res2Name">—</div>
+          <div class="r-record" id="res2Record"></div>
+          <div class="r-pct" id="res2Pct">—</div>
+          <div class="r-win-label">Win probability</div>
+        </div>
+      </div>
+      <div class="prob-track">
+        <div class="prob-bar-f1" id="probBarF1" style="width:50%"></div>
+        <div class="prob-bar-f2" id="probBarF2"></div>
+      </div>
+      <div class="prob-labels">
+        <span id="barLabel1">50%</span>
+        <span id="barLabel2">50%</span>
+      </div>
+      <div class="odds-box">
+        <div class="odds-box-label">// Betting Value Calculator</div>
+        <div class="odds-inputs-row">
+          <div class="odds-input-grp">
+            <label id="oddsLbl1">Fighter 1 odds</label>
+            <input class="odds-inp" id="odds1" type="text" placeholder="+150 or -200" oninput="calcOddsEV()" />
+          </div>
+          <div class="odds-input-grp">
+            <label id="oddsLbl2">Fighter 2 odds</label>
+            <input class="odds-inp" id="odds2" type="text" placeholder="+150 or -200" oninput="calcOddsEV()" />
+          </div>
+        </div>
+        <div id="valueOut"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Predictions based on historical UFC statistics &mdash; not for betting use<br>
+</footer>
+
+<script>
+  // ── Weight class config ───────────────────────────────────────────────
+  const WEIGHT_CLASSES = {
+    male:   ['any','flyweight','bantamweight','featherweight','lightweight','welterweight','middleweight','light heavyweight','heavyweight'],
+    female: ['any','strawweight','flyweight','bantamweight','featherweight'],
+  };
+
+  const WC_LABELS = {
+    'any': 'Any', 'flyweight': 'Flyweight', 'bantamweight': 'Bantam',
+    'featherweight': 'Feather', 'lightweight': 'Light', 'welterweight': 'Welter',
+    'middleweight': 'Middle', 'light heavyweight': 'Lt Heavy',
+    'heavyweight': 'Heavy', 'strawweight': 'Straw',
+  };
+
+  // ── Randomizer state ──────────────────────────────────────────────────
+  const _randState = {
+    f1: { gender: 'male', wc: 'any' },
+    f2: { gender: 'male', wc: 'any' },
+  };
+
+  function renderRandClasses(key) {
+    const n = key.slice(-1);
+    const { gender, wc: sel } = _randState[key];
+    const container = document.getElementById('randClasses' + n);
+    if (!container) return;
+    container.innerHTML = WEIGHT_CLASSES[gender].map(w =>
+      `<button class="rp-wc${w === sel ? ' active' : ''}" onclick="setRandWc('${key}','${w.replace(/'/g,"\\'")}',this)">${WC_LABELS[w] || w}</button>`
+    ).join('');
+    const row = document.getElementById('randGenderRow' + n);
+    if (row) {
+      row.querySelectorAll('.rp-gender-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', (i === 0 ? 'male' : 'female') === gender);
+      });
+    }
+  }
+
+  function setRandGender(key, gender) {
+    _randState[key].gender = gender;
+    _randState[key].wc = 'any';
+    renderRandClasses(key);
+  }
+
+  function setRandWc(key, wc, btn) {
+    _randState[key].wc = wc;
+    const n = key.slice(-1);
+    document.getElementById('randClasses' + n).querySelectorAll('.rp-wc').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function toggleRandPicker(key, e) {
+    e.stopPropagation();
+    const n = key.slice(-1);
+    const picker = document.getElementById('randPicker' + n);
+    const isOpen = picker.classList.contains('open');
+    document.querySelectorAll('.rand-picker').forEach(p => p.classList.remove('open'));
+    if (!isOpen) picker.classList.add('open');
+  }
+
+  function closeRandPicker(key) {
+    document.getElementById('randPicker' + key.slice(-1)).classList.remove('open');
+  }
+
+  // ── Model selector ────────────────────────────────────────────────────
+  async function loadModels() {
+    try {
+      const res = await fetch('/models');
+      const models = await res.json();
+      const container = document.getElementById('modelSelector');
+      models.forEach((m, i) => {
+        const lbl = document.createElement('label');
+        lbl.className = 'model-pill';
+        lbl.innerHTML =
+          `<input type="radio" name="model" value="${escHtml(m.key)}"${i === 0 ? ' checked' : ''}>` +
+          `<span>${escHtml(m.label)}<em>${(m.accuracy * 100).toFixed(1)}%</em></span>`;
+        container.appendChild(lbl);
+      });
+    } catch (_) {}
+  }
+
+  function selectedModel() {
+    return document.querySelector('input[name="model"]:checked')?.value || 'random_forest';
+  }
+
+  // ── Fighter portraits ─────────────────────────────────────────────────
+  const PORTRAIT_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23111120'/%3E%3Ccircle cx='40' cy='29' r='14' fill='%23252540'/%3E%3Cellipse cx='40' cy='72' rx='24' ry='20' fill='%23252540'/%3E%3C/svg%3E";
+  const _imageCache = {};
+
+  function portraitEl(key) {
+    return document.getElementById(key === 'f1' ? 'portrait1' : 'portrait2');
+  }
+
+  function resetPortrait(key) {
+    const img = portraitEl(key);
+    img.src = PORTRAIT_PLACEHOLDER;
+    img.classList.remove('active');
+  }
+
+  async function fetchFighterImage(key, name) {
+    const img = portraitEl(key);
+    img.src = PORTRAIT_PLACEHOLDER;
+    img.classList.remove('active');
+    if (name in _imageCache) {
+      if (_imageCache[name]) { img.src = _imageCache[name]; img.classList.add('active'); }
+      return;
+    }
+    try {
+      const res = await fetch(`/fighter-image?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      _imageCache[name] = data.image_url || null;
+      if (data.image_url) { img.src = data.image_url; img.classList.add('active'); }
+    } catch { _imageCache[name] = null; }
+  }
+
+  // ── Autocomplete ───────────────────────────────────────────────────────
+  let debounceTimer = null;
+  let activeIndex = { f1: -1, f2: -1 };
+
+  function setupAutocomplete(inputId, dropId) {
+    const input = document.getElementById(inputId);
+    const drop  = document.getElementById(dropId);
+    const key   = inputId;
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = input.value.trim();
+      if (!q) resetPortrait(key);
+      if (q.length < 2) { closeDrop(drop, key); return; }
+      debounceTimer = setTimeout(() => fetchSuggestions(q, input, drop, key), 200);
+    });
+
+    input.addEventListener('keydown', e => {
+      const items = drop.querySelectorAll('.dropdown-item');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex[key] = Math.min(activeIndex[key] + 1, items.length - 1);
+        highlightItem(items, key);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex[key] = Math.max(activeIndex[key] - 1, 0);
+        highlightItem(items, key);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex[key] >= 0 && items[activeIndex[key]]) {
+          const el = items[activeIndex[key]];
+          selectItem(el.dataset.name, input, drop, key, el.dataset.gender, el.dataset.weightClass);
+        } else {
+          closeDrop(drop, key);
+          runPrediction();
+        }
+      } else if (e.key === 'Escape') {
+        closeDrop(drop, key);
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!input.contains(e.target) && !drop.contains(e.target)) closeDrop(drop, key);
+    });
+  }
+
+  async function fetchSuggestions(q, input, drop, key) {
+    try {
+      const res = await fetch(`/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      renderDrop(data, input, drop, key);
+    } catch (_) {}
+  }
+
+  function renderDrop(items, input, drop, key) {
+    if (!items.length) { closeDrop(drop, key); return; }
+    drop.innerHTML = items.map(f =>
+      `<div class="dropdown-item" data-name="${escHtml(f.name)}" data-gender="${escHtml(f.gender||'')}" data-weight-class="${escHtml(f.weight_class||'')}" onclick="selectItem('${escHtml(f.name)}',document.getElementById('${key}'),document.getElementById('drop${key.slice(-1)}'),'${key}','${escHtml(f.gender||'')}','${escHtml(f.weight_class||'')}')">
+        <span>${escHtml(f.name)}</span><span class="record">${escHtml(f.record)}</span>
+      </div>`
+    ).join('');
+    activeIndex[key] = -1;
+    drop.classList.add('open');
+  }
+
+  function highlightItem(items, key) {
+    items.forEach((el, i) => el.classList.toggle('active', i === activeIndex[key]));
+    if (items[activeIndex[key]]) items[activeIndex[key]].scrollIntoView({ block: 'nearest' });
+  }
+
+  function selectItem(name, input, drop, key, gender, weight_class) {
+    input.value = name;
+    closeDrop(drop, key);
+    fetchFighterImage(key, name);
+    if (gender || weight_class) syncOtherPicker(key, gender, weight_class);
+    const n = key.slice(-1);
+    document.getElementById('odds' + n).value = '';
+    calcOddsEV();
+  }
+
+  function syncOtherPicker(key, gender, weight_class) {
+    const otherKey = key === 'f1' ? 'f2' : 'f1';
+    if (gender) _randState[otherKey].gender = gender;
+    if (weight_class && weight_class !== 'any') _randState[otherKey].wc = weight_class;
+    renderRandClasses(otherKey);
+  }
+
+  function closeDrop(drop, key) {
+    drop.classList.remove('open');
+    drop.innerHTML = '';
+    activeIndex[key] = -1;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  setupAutocomplete('f1', 'drop1');
+  setupAutocomplete('f2', 'drop2');
+
+  // ── Prediction ────────────────────────────────────────────────────────
+  async function runPrediction() {
+    const f1 = document.getElementById('f1').value.trim();
+    const f2 = document.getElementById('f2').value.trim();
+    const btn = document.getElementById('predictBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    const errorBanner = document.getElementById('errorBanner');
+    const results = document.getElementById('results');
+    const statusMsg = document.getElementById('statusMsg');
+
+    if (!f1 || !f2) { showError('Please enter both fighter names.'); return; }
+
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    spinner.style.display = 'block';
+    errorBanner.classList.remove('visible');
+    results.classList.remove('visible');
+
+    const phases = ['Looking up fighter stats…','Fetching latest fight data…','Running prediction model…'];
+    let phaseIdx = 0;
+    statusMsg.textContent = phases[0];
+    statusMsg.classList.add('visible');
+    const phaseTimer = setInterval(() => {
+      phaseIdx = Math.min(phaseIdx + 1, phases.length - 1);
+      statusMsg.textContent = phases[phaseIdx];
+    }, 4000);
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fighter1: f1, fighter2: f2, model_key: selectedModel() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(err.detail || `Server error ${res.status}`);
+      }
+      showResults(await res.json());
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      clearInterval(phaseTimer);
+      statusMsg.classList.remove('visible');
+      btn.disabled = false;
+      btnText.style.display = '';
+      spinner.style.display = 'none';
+    }
+  }
+
+  function showError(msg) {
+    const banner = document.getElementById('errorBanner');
+    banner.textContent = msg;
+    banner.classList.add('visible');
+  }
+
+  function countUp(el, target, duration = 700) {
+    const t0 = performance.now();
+    (function tick(now) {
+      const t = Math.min((now - t0) / duration, 1);
+      el.textContent = Math.round((1 - Math.pow(1 - t, 3)) * target) + '%';
+      if (t < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  function showResults(data) {
+    const p1 = Math.round(data.f1_win_prob * 100);
+    const p2 = Math.round(data.f2_win_prob * 100);
+    const winner = p1 >= p2 ? 1 : 2;
+
+    document.getElementById('res1Name').textContent = data.f1_name;
+    document.getElementById('res2Name').textContent = data.f2_name;
+    document.getElementById('res1Record').textContent = `${data.f1_record} · ${data.f1_experience} fights`;
+    document.getElementById('res2Record').textContent = `${data.f2_record} · ${data.f2_experience} fights`;
+    countUp(document.getElementById('res1Pct'), p1);
+    countUp(document.getElementById('res2Pct'), p2);
+
+    document.getElementById('card1').classList.toggle('winner', winner === 1);
+    document.getElementById('card2').classList.toggle('winner', winner === 2);
+
+    document.getElementById('probBarF1').style.width = '50%';
+    setTimeout(() => { document.getElementById('probBarF1').style.width = `${p1}%`; }, 50);
+    document.getElementById('barLabel1').textContent = `${data.f1_name.split(' ').pop()} ${p1}%`;
+    document.getElementById('barLabel2').textContent = `${p2}% ${data.f2_name.split(' ').pop()}`;
+    document.getElementById('resultHeader').textContent = `${data.model_label} prediction`;
+
+    _lastProbs = { f1: data.f1_win_prob, f2: data.f2_win_prob, f1Name: data.f1_name, f2Name: data.f2_name };
+    document.getElementById('oddsLbl1').textContent = data.f1_name + ' odds';
+    document.getElementById('oddsLbl2').textContent = data.f2_name + ' odds';
+    calcOddsEV();
+
+    document.getElementById('results').classList.add('visible');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Betting calculator ────────────────────────────────────────────────
+  let _lastProbs = null;
+
+  function parseAmerican(s) {
+    const n = Number(s.trim().replace(/\s/g, ''));
+    if (isNaN(n) || n === 0 || Math.abs(n) === 100) return null;
+    return n;
+  }
+
+  function impliedProb(odds) {
+    return odds > 0 ? 100 / (odds + 100) : Math.abs(odds) / (Math.abs(odds) + 100);
+  }
+
+  function calcOddsEV() {
+    const out = document.getElementById('valueOut');
+    if (!_lastProbs) { out.innerHTML = ''; return; }
+    const o1 = parseAmerican(document.getElementById('odds1').value);
+    const o2 = parseAmerican(document.getElementById('odds2').value);
+    if (o1 === null && o2 === null) { out.innerHTML = ''; return; }
+
+    const fighters = [
+      { odds: o1, prob: _lastProbs.f1, name: _lastProbs.f1Name },
+      { odds: o2, prob: _lastProbs.f2, name: _lastProbs.f2Name },
+    ].filter(f => f.odds !== null);
+
+    let valueFighter = null;
+    const rows = fighters.map(f => {
+      const implied = impliedProb(f.odds);
+      const profit  = f.odds > 0 ? f.odds : 10000 / Math.abs(f.odds);
+      const ev      = f.prob * profit - (1 - f.prob) * 100;
+      const oddsStr = f.odds > 0 ? `+${f.odds}` : `${f.odds}`;
+      const evLabel = (ev >= 0 ? '+' : '−') + '$' + Math.abs(ev).toFixed(0) + ' per $100';
+      if (ev >= 0 && (!valueFighter || ev > valueFighter.ev)) valueFighter = { ...f, ev };
+      return `<div class="value-row">
+        <span class="value-row-name">${escHtml(f.name)} <span style="color:var(--muted);font-size:.68rem">(${oddsStr})</span></span>
+        <span class="value-detail">Model ${(f.prob*100).toFixed(1)}% · Book ${(implied*100).toFixed(1)}%</span>
+        <span class="${ev >= 0 ? 'ev-pos' : 'ev-neg'}">${evLabel}</span>
+      </div>`;
+    });
+
+    let banner;
+    if (valueFighter) {
+      const edge = ((valueFighter.prob - impliedProb(valueFighter.odds)) * 100).toFixed(1);
+      const oddsStr = valueFighter.odds > 0 ? `+${valueFighter.odds}` : `${valueFighter.odds}`;
+      banner = `<div class="value-banner value-pos">Bet ${escHtml(valueFighter.name)} (${oddsStr}) &mdash; +${edge}% edge</div>`;
+    } else {
+      banner = `<div class="value-banner value-neg">No value edge at these odds</div>`;
+    }
+
+    out.innerHTML = banner + '<div class="value-rows">' + rows.join('') + '</div>';
+  }
+
+  // ── Random fighter ────────────────────────────────────────────────────
+  async function pickRandomFighter(key) {
+    const n = key.slice(-1);
+    const { gender, wc } = _randState[key];
+    try {
+      const params = new URLSearchParams({ gender });
+      if (wc && wc !== 'any') params.set('weight_class', wc);
+      const res = await fetch('/random-fighter?' + params);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'No fighters found' }));
+        throw new Error(err.detail || 'No fighters found');
+      }
+      const data = await res.json();
+      selectItem(data.name, document.getElementById(key), document.getElementById('drop' + n), key, data.gender, data.weight_class);
+      closeRandPicker(key);
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  async function randomizeBoth() {
+    const genders = ['male', 'female'];
+    const gender = genders[Math.floor(Math.random() * genders.length)];
+    const classes = WEIGHT_CLASSES[gender].filter(wc => wc !== 'any');
+    const weight_class = classes[Math.floor(Math.random() * classes.length)];
+    const params = new URLSearchParams({ gender, weight_class });
+    try {
+      const [r1, r2] = await Promise.all([fetch('/random-fighter?' + params), fetch('/random-fighter?' + params)]);
+      if (!r1.ok || !r2.ok) throw new Error('No fighters found for that combination');
+      let [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      if (d1.name === d2.name) {
+        const r3 = await fetch('/random-fighter?' + params);
+        if (r3.ok) d2 = await r3.json();
+      }
+      selectItem(d1.name, document.getElementById('f1'), document.getElementById('drop1'), 'f1', gender, weight_class);
+      selectItem(d2.name, document.getElementById('f2'), document.getElementById('drop2'), 'f2', gender, weight_class);
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.autocomplete-wrapper'))
+      document.querySelectorAll('.rand-picker').forEach(p => p.classList.remove('open'));
+  });
+
+  document.getElementById('f1').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !document.getElementById('drop1').querySelectorAll('.dropdown-item').length) runPrediction();
+  });
+  document.getElementById('f2').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !document.getElementById('drop2').querySelectorAll('.dropdown-item').length) runPrediction();
+  });
+
+  renderRandClasses('f1');
+  renderRandClasses('f2');
+  loadModels();
+</script>
+</body>
+</html>

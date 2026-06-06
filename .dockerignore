@@ -1,0 +1,14 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+.env
+kaggle.json
+notebooks/
+data/processed/
+*.zip
+.DS_Store
+Thumbs.db
+frontEndStyle.md
+README.md
+fly.toml
